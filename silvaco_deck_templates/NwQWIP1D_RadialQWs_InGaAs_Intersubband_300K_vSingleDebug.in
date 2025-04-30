@@ -1,0 +1,679 @@
+go atlas
+
+# Set the lattice temperature
+set TL = 300.0
+#set TL = 77.0
+#set TL = 180.0
+
+# --------------- All the key fitting parameters identified -----------------#
+set dEc_per = 0.75
+set x_Ga_qwell = 0.203
+set num_traveling_states = 1
+#NOTE: the room-temperature simulations do not need the following two parameters.
+set eg300_InGaAs = 0.614
+set eg300_fit_offset_InGaAs = 0.12
+# ---------------------------------------------------------------------------#
+
+# ---- History of the trial of the parameter 'QM_solver_grid' ---- #
+# NOTE: just setting 'QM_solver_grid = 30' is good enough to solve for
+#       'num_traveling_states=1'
+#set QM_solver_grid = 30
+# Other grid number that was trialed by failed:
+# NOTE: for grid number between 70 ~ 140, I have not tested; 
+#       but I do not think they will work.
+# The grid number parameter below were tested and none of them worked.
+#set QM_solver_grid = 150
+#set QM_solver_grid = 30
+set QM_solver_grid = 50
+#set QM_solver_grid = 40
+#------------------------------------------------------------------#
+
+
+#------------------------------------------------------------------------ 
+#Section 1: define device geometry parameters 
+#------------------------------------------------------------------------ 
+# define QW thickness; unit=[um] 
+##set qwell_width = 0.006
+##set barrier_width = 0.05
+
+# Define device dimensions with superlattice QWs; unit=[um]
+set qwell_width_1   = 4.8e-3  # Width of the quantum well 
+set qwell_width_2   = 4.3e-3  # Width of the quantum well 
+set qwell_width_3   = 3.5e-3  # Width of the quantum well 
+set qwell_width_4   = 2.8e-3  # Width of the quantum well 
+set qwell_width_5   = 2.6e-3  # Width of the quantum well 
+
+set barrier_width_0   = 25.0e-3  # Width of the barrier     
+set barrier_width_1   = 50.0e-3  # Width of the barrier      
+set barrier_width_2   = 36.8e-3  # Width of the barrier      
+set barrier_width_3   = 31.0e-3  # Width of the barrier      
+set barrier_width_4   = 25.5e-3  # Width of the barrier      
+set barrier_width_5   = 25.5e-3  # Width of the barrier      
+
+set InP_outer_shell = 33.0e-3
+set InP_core_radius = 92.5e-3
+
+set left_bulk_width    = $InP_outer_shell-$barrier_width_5
+set right_bulk_width   = $InP_core_radius-$barrier_width_0
+
+# The height of the inner InP core is 1018 nm.
+# let's just take 1um as the height
+set nw_core_height  = 1.0
+set nw_facet_length = 0.03
+
+
+# 
+#------------------------------------------------------------------------ 
+#Section 2: define domain mesh parameters 
+#------------------------------------------------------------------------ 
+# 1. mesh grid for NW 
+# 1.1 mesh grid spacing for x-direction (radially) 
+set gs_x = 0.5
+
+# 1.2 mesh grid spacing for y-direction (axially) 
+set gs_bulk = 4.0e-3
+set gs_barrier = 2.0e-3
+set gs_qwell = 4.0e-4
+
+#** set number of refined grids for Schrodinger solver 
+#set QM_solver_grid = 30
+ 
+# 
+#------------------------------------------------------------------------ 
+#Section 3: define some material properties 
+#------------------------------------------------------------------------ 
+# Materials fractions and doping 
+# QW was initially suspected to be made of In(1-x)Ga(x)As(y)P(1-y)
+# But we decided to consider it made of In(1-x)Ga(x)As
+# The following parameters setting up the QW: In(1-x)Ga(x)As
+
+## This gives a bandgap of ~0.586eV
+#set x_Ga_qwell = 0.317
+
+## This gives a bandgap of ~0.65eV
+#set x_Ga_qwell = 0.386
+
+## This gives a bandgap of ~0.703eV
+#set x_Ga_qwell = 0.437
+
+## This gives a bandgap of ~0.553eV
+#set x_Ga_qwell = 0.276
+
+## This gives a bandgap of ~0.604eV
+#set x_Ga_qwell = 0.333
+
+## This gives a bandgap of ~0.623eV
+#set x_Ga_qwell = 0.354
+
+## This gives a bandgap of ~0.633eV
+#set x_Ga_qwell = 0.365
+
+# This gives a bandgap of ~0.614eV
+#set x_Ga_qwell = 0.344
+
+# doping concentration; unit=[1/cm^3] 
+set dpconc_bulk_contact = 1.0e16
+set dpconc_qwell        = 1.0e16
+set dpconc_barrier      = 1.0e16
+
+# 
+#------------------------------------------------------------------------ 
+#Section 4: define mesh 
+#------------------------------------------------------------------------ 
+mesh width=$nw_facet_length space.mult=1.0  
+ 
+#---------------------- x-direction: ------------------------#
+x.mesh loc =  0.0                   spacing = $gs_x
+x.mesh loc =  $nw_core_height       spacing = $gs_x
+#------------------------------------------------------------#
+
+ 
+# y-direction 
+# left bulk contact region
+y.mesh loc = -$left_bulk_width                    spacing = $gs_bulk
+y.mesh loc = -$gs_bulk                            spacing = $gs_bulk
+
+# ----------------------------- Periodic multi-QW structure -----------------------------------#
+# repetitive unit structure: 
+# // barrier--qwell //
+# repeat qwell #1
+y.mesh loc =  0.0                                   spacing = $gs_barrier
+y.mesh loc =  $barrier_width_5-$gs_barrier          spacing = $gs_barrier
+y.mesh loc =  $barrier_width_5                      spacing = $gs_qwell
+y.mesh loc =  $barrier_width_5+$qwell_width_5       spacing = $gs_qwell
+set comb5  =  $barrier_width_5+$qwell_width_5
+
+# repeat qwell #2
+y.mesh loc =  $comb5+$gs_barrier                          spacing = $gs_barrier
+y.mesh loc =  $comb5+$barrier_width_4-$gs_barrier         spacing = $gs_barrier
+y.mesh loc =  $comb5+$barrier_width_4                     spacing = $gs_qwell
+y.mesh loc =  $comb5+$barrier_width_4+$qwell_width_4      spacing = $gs_qwell
+set comb4  =  $comb5+$barrier_width_4+$qwell_width_4
+
+# repeat qwell #3
+y.mesh loc =  $comb4+$gs_barrier                          spacing = $gs_barrier
+y.mesh loc =  $comb4+$barrier_width_3-$gs_barrier         spacing = $gs_barrier
+y.mesh loc =  $comb4+$barrier_width_3                     spacing = $gs_qwell
+y.mesh loc =  $comb4+$barrier_width_3+$qwell_width_3      spacing = $gs_qwell
+set comb3  =  $comb4+$barrier_width_3+$qwell_width_3
+
+# repeat qwell #4
+y.mesh loc =  $comb3+$gs_barrier                          spacing = $gs_barrier
+y.mesh loc =  $comb3+$barrier_width_2-$gs_barrier         spacing = $gs_barrier
+y.mesh loc =  $comb3+$barrier_width_2                     spacing = $gs_qwell
+y.mesh loc =  $comb3+$barrier_width_2+$qwell_width_2      spacing = $gs_qwell
+set comb2  =  $comb3+$barrier_width_2+$qwell_width_2
+
+# repeat qwell #5
+y.mesh loc =  $comb2+$gs_barrier                          spacing = $gs_barrier
+y.mesh loc =  $comb2+$barrier_width_1-$gs_barrier         spacing = $gs_barrier
+y.mesh loc =  $comb2+$barrier_width_1                     spacing = $gs_qwell
+y.mesh loc =  $comb2+$barrier_width_1+$qwell_width_1      spacing = $gs_qwell
+set comb1  =  $comb2+$barrier_width_1+$qwell_width_1
+
+
+# right barrier
+y.mesh loc = $comb1+$gs_barrier               spacing = $gs_barrier
+y.mesh loc = $comb1+$barrier_width_0          spacing = $gs_barrier
+set comb0  = $comb1+$barrier_width_0
+# --------------------------END: Periodic multi-QW structure ----------------------------------#
+
+# right bulk contact region
+y.mesh loc = $comb0+$gs_bulk               spacing = $gs_bulk
+y.mesh loc = $comb0+$right_bulk_width      spacing = $gs_bulk
+
+
+# Eliminate mesh grids in substrate 
+ 
+# apply 2 times for radial N and outer I shells 
+# left 
+#eliminate rows x.min=-$"SUBSTRATE_HEIGHT"-$"OXCIDE_HEIGHT" x.max=-$"OXCIDE_HEIGHT" y.min=-$"INP_NPLUS_SHELL_RADIUS" y.max= -$"INGAAS_QW_RADIUS" 
+#eliminate rows x.min=-$"SUBSTRATE_HEIGHT"-$"OXCIDE_HEIGHT" x.max=-$"OXCIDE_HEIGHT" y.min=-$"INP_NPLUS_SHELL_RADIUS" y.max= -$"INGAAS_QW_RADIUS" 
+# right 
+#eliminate rows x.min=-$"SUBSTRATE_HEIGHT"-$"OXCIDE_HEIGHT" x.max=-$"OXCIDE_HEIGHT" y.min= $"INGAAS_QW_RADIUS" y.max= $"INP_NPLUS_SHELL_RADIUS"  
+#eliminate rows x.min=-$"SUBSTRATE_HEIGHT"-$"OXCIDE_HEIGHT" x.max=-$"OXCIDE_HEIGHT" y.min= $"INGAAS_QW_RADIUS" y.max= $"INP_NPLUS_SHELL_RADIUS"  
+ 
+ 
+# 
+#------------------------------------------------------------------------ 
+#Section 5: define region and material properties 
+#------------------------------------------------------------------------ 
+region num=1  name=rg_bulk_outer     material=InP     y.max=0.0
+
+# Repeat QW5 system
+region num=2  name=rg_barrier  material=InP     y.min=0.0
+region num=3  name=rg_qwell    material=InGaAs x.comp=$x_Ga_qwell \
+                               y.min=$barrier_width_5 
+# Repeat QW4 system
+region num=4  name=rg_barrier  material=InP      y.min=$comb5 
+region num=5  name=rg_qwell    material=InGaAs x.comp=$x_Ga_qwell \
+                               y.min=$comb5+$barrier_width_4 
+# Repeat QW3 system
+region num=6  name=rg_barrier  material=InP      y.min=$comb4 
+region num=7  name=rg_qwell    material=InGaAs x.comp=$x_Ga_qwell \
+                               y.min=$comb4+$barrier_width_3 
+# Repeat QW2 system
+region num=8  name=rg_barrier  material=InP      y.min=$comb3 
+region num=9  name=rg_qwell    material=InGaAs x.comp=$x_Ga_qwell \
+                               y.min=$comb3+$barrier_width_2 
+
+# Repeat QW1 system
+region num=10  name=rg_barrier  material=InP      y.min=$comb2 
+region num=11  name=rg_qwell    material=InGaAs x.comp=$x_Ga_qwell \
+                                y.min=$comb2+$barrier_width_1 
+# The last barrier (barrier 0)
+region num=12  name=rg_barrier  material=InP      y.min=$comb1 
+
+##-- End Multi-QW regions
+region num=13 name=rg_bulk_sub material=InP y.min=$comb0 y.max=$comb0+$right_bulk_width substrate
+
+# define InGaAsP QW; In(1-x)Ga(x)As(y)P(1-y) 
+#region num=2 name=rg_InGaAsP_qw1 material=InGaAsP x.comp=$X_Ga_Radial y.comp=$Y_As_Radial \
+#                             y.min=$InP_top \ 
+#                             y.max=$InP_top+1*$QW_radial \
+#                             qwell well.ny=$QM_solver_grid qwnum=1
+
+ 
+# define InGaAsP; Top axial QW; In(1-x)Ga(x)As(y)P(1-y)  
+# NOTE I shrink the top axial QW region so it doesn't touch the radial QWs 
+#region num=7 name=QW_Axial material=InGaAsP x.comp=$"X_Ga_Axial" y.comp=$"Y_As_Axial" \  
+#                           x.min= -$"INP_I_SHELL_INNER_RADIUS" x.max=$"INP_I_SHELL_INNER_RADIUS" \  
+#       y.min=$"INP_I_SHELL_INNER_HEIGHT" y.max=$"INGAAS_QW_HEIGHT" \  
+#       qwell led well.ny=$"QM_solver_grid" qwnum=1 
+# define InGaAsP; Left radial QW; In(1-x)Ga(x)As(y)P(1-y) 
+#region num=7 name=QW_Radial_Left material=InGaAsP x.comp=$"X_Ga_Radial" y.comp=$"Y_As_Radial" \
+#                           y.min= -$"INGAAS_QW_RADIUS" y.max= -$"INP_I_SHELL_INNER_RADIUS" \ 
+#                           x.min=0 x.max= $"INP_PPLUS_CORE_HEIGHT" \
+#                           qwell led well.ny=$"QM_solver_grid" qwnum=1 
+## define InGaAsP; Right radial QW; In(1-x)Ga(x)As(y)P(1-y) 
+#region num=8 name=QW_Radial_Right material=InGaAsP x.comp=$"X_Ga_Radial" y.comp=$"Y_As_Radial" \
+#                           y.min= $"INP_I_SHELL_INNER_RADIUS" y.max=$"INGAAS_QW_RADIUS" \
+#                           x.min=0 x.max= $"INP_PPLUS_CORE_HEIGHT" \
+#                           qwell led well.ny=$"QM_solver_grid" qwnum=2 
+ 
+# NOTE there is no i-InP inner shell in the AxialQW-ONLY configuration 
+# define NW i-InP inner shell (NOTE: will overwrite parts of structures specified above) 
+#region num=9 name=InP_i_inner_shell material=InP x.min= -$"INP_I_SHELL_INNER_RADIUS" x.max=$"INP_I_SHELL_INNER_RADIUS" \
+#                                                  y.min=0 y.max=$"INP_I_SHELL_INNER_HEIGHT" 
+
+# 
+#------------------------------------------------------------------------ 
+#Section 6: define electrical contact 
+#------------------------------------------------------------------------ 
+electrode name=substrate  bottom
+electrode name=emitter    top
+ 
+# 
+#------------------------------------------------------------------------ 
+#Section 7: define doping concentration 
+#------------------------------------------------------------------------ 
+doping name=rg_bulk_outer  uniform n.type conc=$dpconc_bulk_contact 
+doping name=rg_bulk_sub    uniform n.type conc=$dpconc_bulk_contact 
+#doping name=rg_qwell   uniform n.type conc=$dpconc_qwell
+doping name=rg_barrier uniform n.type conc=$dpconc_barrier
+
+
+# 
+#------------------------------------------------------------------------ 
+#Section 8.1: define bulk material properties 
+#------------------------------------------------------------------------ 
+material name=rg_bulk_outer   taun0=0.3e-9  taup0=0.3e-9 copt=1.2e-10
+material name=rg_bulk_sub     taun0=0.3e-9  taup0=0.3e-9 copt=1.2e-10
+material name=rg_qwell    taun0=0.3e-9  taup0=0.3e-9 copt=1.1e-10
+material name=rg_barrier  taun0=0.3e-9  taup0=0.3e-9 copt=1.2e-10
+
+# define the temperature dependent bandgap for InGaAsP quantum well
+# NOTE: the parameter 'eg300' is back calcualted from the bandgap at 300K. 
+#       the room-temp bandgap is read from the silvaco output, and is a fitting paramter that 
+#       matches room-temp PL peak.
+# The empirical Varshini formula for the temperature dependent bandgap parameters are extracted from 
+# Ref: K.Satzke, G. Weiser, R. Hoger, W.Thulke, J. Appl. Phys., 63, no.11, pp.5485-5490 (1988).
+#material name=rg_qwell eg300=0.63 egalpha=4.26e-4 egbeta=224
+# For InP, the Silvaco default (specifying 'models cubic35') is the same as Vurgaftman et al.
+# BUT these default bandgap input parameters do not agree with our InP PL measurement
+# Therefore, the input parameters are modified after fitting the experimental PL spectra.
+material name=rg_bulk_outer eg300=1.32282 egalpha=0.000306086 egbeta=44.3822
+material name=rg_bulk_sub   eg300=1.32282 egalpha=0.000306086 egbeta=44.3822
+material name=rg_barrier    eg300=1.32282 egalpha=0.000306086 egbeta=44.3822
+
+# Adjust the band alignment between InP and InGaAs
+material name=rg_bulk_outer align=$dEc_per
+material name=rg_bulk_sub   align=$dEc_per 
+material name=rg_barrier    align=$dEc_per
+
+# Include incomplete ionization model
+# For InP NW, n-type dopant is Si and p-type dopant is Zn
+# get the dopant activation energy from: https://www.ioffe.ru/SVA/NSM/Semicond/InP/bandstr.html#Donors
+material name=rg_bulk_outer   gcb=2 edb=0.0057 gvb=4 eab=0.035
+material name=rg_bulk_sub     gcb=2 edb=0.0057 gvb=4 eab=0.035
+material name=rg_barreir      gcb=2 edb=0.0057 gvb=4 eab=0.035
+# For InGaAs
+# Ref: http://www.ioffe.ru/SVA/NSM/Semicond/GaInAs/bandstr.html#Donors
+# NOTE the value of the shallow donor energy level (Sn, Ge, Si, C) is ideally for Ga(0.47)In(0.53)As
+material name=rg_qwell gcb=2 edb=0.005 
+
+
+## set up Lorentzian line broadening
+#set lorenzian_gamma0 = 1.0e-6
+set lorenzian_gamma0 = 10e-3
+#set lorenzian_gamma0 = 1.5e-2
+material well.gamma0=$lorenzian_gamma0
+
+#TODO: to be extracted perhaps from the kp_8_band{} parameters in Nextnano
+material name=rg_qwell  ep.mbulk=22.94 
+#TODO, again from nextnano
+material name=rg_qwell imag.index=0 real.index=3.9123 
+#by reading from deck output, I know that InP affinity @300K is 4.4eV
+#material name=rg_qwell affinity=4.4+0.242 mc=0.041 m.dsn=0.041
+#material name=rg_bulk  affinity=4.4+0.242 m.dsn=0.041
+
+# Adjust the conduction band offset dEc 
+# The default material model in Silvaco gives the affinity of InGaAsP 4.62 eV
+# comment out the line below if you want to resume the default affinity
+#material name=rg_qwell affinity=4.4+0.27
+#material name=rg_qwell affinity=4.4+0.2105 mc=0.041 m.dsn=0.041
+#material name=rg_bulk  affinity=4.4+0.2105 m.dsn=0.041
+
+
+## for InGaAsP, the 'copt' is actually for Ga0.47In0.53As0.6P0.4; y=0.6; 300 K  (http://www.ioffe.ru/SVA/NSM/Semicond/GaInAsP/basic.html) 
+#material name=rg_InGaAsP_qw1 taun0=0.3e-9 taup0=0.3e-9 copt=1.1e-10 ep.mbulk=21.84
+
+
+ 
+#Capture escape time 
+#material name=QW_Radial_Left  well.taup=1e-12 well.taun=1e-12 
+#material name=QW_Radial_Right well.taup=1e-12 well.taun=1e-12 
+#material name=QW_Axial        well.taup=1e-12 well.taun=1e-12 
+ 
+# 
+#------------------------------------------------------------------------ 
+#Section 8.2: define interface properties  
+#------------------------------------------------------------------------ 
+#interface qf=-1e12 ^S.I S.X y.min=0.0 y.max=$"INP_NPLUS_SHELL_HEIGHT" x.min=-$"INP_NPLUS_SHELL_RADIUS" x.max=-$"INP_NPLUS_SHELL_RADIUS"+1*$"GRID_SPACING_RADIAL_2" \  
+#          S.N=1e5 S.P=1e5 
+#interface qf=-1e12 ^S.I S.X y.min=0.0 y.max=$"INP_NPLUS_SHELL_HEIGHT" x.min= $"INP_NPLUS_SHELL_RADIUS"-1*$"GRID_SPACING_RADIAL_2" x.max= $"INP_NPLUS_SHELL_RADIUS" \  
+#          S.N=1e5 S.P=1e5 
+
+
+# 
+#------------------------------------------------------------------------ 
+#Section 9: define models to be used 
+#------------------------------------------------------------------------ 
+# define model applied to the entire domain 
+models incomplete temperature=$TL
+#NOTE: InP assumes cubic35, 
+#      but InGaAsP use the silvaco's default material database (consistent with NSM Archive)
+models fermi srh cubic35 print
+#models name=rg_bulk_outer cubic35  
+#models name=rg_bulk_sub   cubic35
+#models name=rg_barrier    cubic35
+
+
+## trial #1 - solve for the superlattice; but this method cannot generate intersubband spectrum!
+## Extra Note 1: setting 'lorentz' in both 'rg_qwell' and 'rg_barrier' or just in 'rg_qwell' seems to give the same absorption profile.
+models name=rg_qwell   nslatt sl.number=1 slatt.cnts=$num_traveling_states nqwell well.ny=$QM_solver_grid zb.one well.cnbs=20 intersub.spon well.capt well.selfcon lorentz
+models name=rg_barrier nslatt sl.number=1 slatt.cnts=$num_traveling_states nqwell well.ny=$QM_solver_grid zb.one well.cnbs=20 intersub.spon well.capt well.selfcon lorentz
+models name=rg_bulk_outer well.margin=0.0
+models name=rg_bulk_sub   well.margin=0.0
+
+# These are the old command for the inter-band transision
+#models name=rg_qwell   qwell well.ny=$QM_solver_grid zb.one well.cnbs=20 well.vnbs=20 spontaneous well.capt well.selfcon lorentz
+#models name=rg_barrier qwell well.ny=$QM_solver_grid zb.one well.cnbs=20 well.vnbs=20 spontaneous well.capt well.selfcon lorentz
+#models name=rg_qwell   slatt sl.number=1 slatt.cnts=1 slatt.vnts=1 
+#models name=rg_barrier slatt sl.number=1 slatt.cnts=1 slatt.vnts=1 
+
+#models name=rg_bulk_outer well.margin=0.0
+#models name=rg_bulk_sub   well.margin=0.0
+
+## trial #2 - solve all these QWs individually...
+#models name=rg_qwell qwell zb.one well.ny=$QM_solver_grid well.cnbs=5 well.vnbs=1 sp.geometry=1DY INTERSUB.SPONT well.capt well.selfcon
+#models name=rg_qwell nqwell zb.one well.cnbs=20 sp.geometry=1DY INTERSUB.SPONT well.capt well.selfcon
+#models name=rg_barrier nqwell zb.one well.cnbs=20 sp.geometry=1DY INTERSUB.SPONT well.capt well.selfcon
+#models name=rg_bulk well.margin=0.00
+
+
+# define QW specific models with Zincblende one (valence) band model, i.e. "ZB.ONE" (i.e. only heavy hole)
+#models name=rg_InGaAsP_qw1  qwell spontaneous INTERSUB.SPONT well.capt zb.one well.cnbs=6 well.vnbs=6 sp.geometry=1DY well.ny=$"QM_solver_grid" qwnum=1 
+
+# define QW specific models with Zincblende two (valence) band model, i.e. "Li" (i.e. heavy hole + light hole)
+#models name=rg_InGaAsP_qw1 qwell spontaneous INTERSUB.SPONT well.selfcon well.capt li well.cnbs=6 well.vnbs=6 sp.geometry=1DY well.ny=$"QM_solver_grid" qwnum=1 
+
+# define QW specific models with Zincblende one (valence) band model, i.e. "ZB.ONE" (i.e. only heavy hole)
+#models name=rg_InGaAsP_qw1 qwell spontaneous INTERSUB.SPONT qwell.bcgain well.capt zb.one well.cnbs=6 well.vnbs=6 sp.geometry=1DY well.ny=$"QM_solver_grid" qwnum=1 
+
+
+#models name=QW_Raidal_Left  qwell led spontaneous well.capt well.inplane well.selfcon well.npred=7 zb.one well.cnbs=6 well.vnbs=6 sp.geometry=1DY well.ny=$"QM_solver_grid" qwnum=1 
+#models name=QW_Raidal_Right qwell led spontaneous well.capt well.inplane well.selfcon well.npred=7 zb.one well.cnbs=6 well.vnbs=6 sp.geometry=1DY well.ny=$"QM_solver_grid" qwnum=2 
+ 
+ 
+#define constant mobility 
+mobility name=rg_barrier         mun=120 mup=100  
+mobility name=rg_bulk_outer      mun=120 mup=100  
+mobility name=rg_bulk_sub        mun=120 mup=100  
+mobility name=rg_qwell           mun=150 mup=120
+
+
+# Enable the command below if you do a single run to save the device structure; 
+# otherwise, save the time and not save a device structure 
+#save outf=NwQWIP_Radial1D_device.str 
+
+# ------------------------------------------------- END: basic device setup -----------------------------------------------------------------------------------------------## 
+ 
+#method gummel newton 
+method gummel newton min.temp=2.0 max.temp=1000.0
+method maxtrap=20   itlimit=25
+#method maxtrap=10   itlimit=25  
+ 
+ 
+#define some output for standard structure files 
+output con.band val.band band.param  
+ 
+#define some special probes 
+#probe name=mybands_QW_radial y=$"INP_PPLUS_CORE_HEIGHT"/2.0 x.min= -$"INP_NPLUS_SHELL_RADIUS" x.max=$"INP_PPLUS_CORE_RADIUS" con.band val.band qfn qfp nwell pwell state=1  
+ 
+solve init 
+
+#solve vsubstrate=0.0  name=substrate outfile=NwQWIP_Radial1D_v1_bias_0p0V.sta master onefileonly
+solve vsubstrate=0.0  name=substrate outfile=NwQWIP_Radial1D_v1_bias_0p0V_intraband.sta master onefileonly
+#solve vsubstrate=0.0  
+#save qwell.spectrum=NwQWIP_Radial1D_v1_ZBTWO_interband_bias_0p0V.log lmin=0.90 lmax=2.3 nsamp=300 
+#save qwell.spectrum=NwQWIP_Radial1D_v1_ZBONE_interband_bias_0p0V.log lmin=1.0 lmax=1.8 nsamp=300 
+#save qwell.spectrum=NwQWIP_Radial1D_v1_ZBONE_interband_bias_0p0V_300K.log lmin=1.0 lmax=1.8 nsamp=300 
+#save qwell.spectrum=NwQWIP_Radial1D_v1_ZBONE_interband_bias_0p0V_300K.log lmin=1.0 lmax=1.8 nsamp=300 
+save SPEC.INTERSUB="intraband_NwQWIP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.log" lmin=2.0 lmax=6.0 nsamp=600 
+#save SPEC.INTERSUB=NwQWIP_Radial1D_v1_intersubband_bias_0p0V_300K.log lmin=2.0 lmax=6.0 nsamp=800
+
+# extract and save the data
+go internal
+get_data infile="intraband_NwQWIP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.log" \
+         outfile="extracted_intraband_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.dat" \
+         name="Wavelength;Gain (TM, electrons) (well 1) (1/cm)" 
+
+quit
+
+## NOTE: the extraction function currently does not work!
+## It cannot extract any quantities from a spectrum file!
+# extract the normalised InGaAs PL specture for the Deckbuild optimizer
+#extract init infile="NwQWIP_Radial1D_v1_ZBONE_interband_bias_0p0V_300K.log"
+#extract init infile="NwQWIP_Radial1D_v1_ZBONE_interband_bias_0p0V_300K.spc"
+#extract name="InGaAs_PL_normalised" curve("Wavelength", "Flux Spectral Density"/max("Flux Spectral Density")) outfile="test.dat"
+#extract name="InGaAs_PL_normalised" curve("Wavelength", "Flux Spectral Density (well 1)"/max("Flux Spectral Density (well 1)")) outfile="test.dat"
+#extract name="InGaAs_PL_normalised" curve(elect."Wavelength",elect."Wavelength"/max(elect."Wavelength")) outfile="test.dat"
+#extract name="InGaAs_PL_normalised" curve(elect."Wavelength",impurity=elect."Power Spectral Density (well 1)") outfile="test.dat"
+
+#solve vsubstrate=0.1 vstep=0.1 vfinal=1.5  name=substrate outfile=InGaAs_InP_QWIP_1993_v1_bias_1p5V.sta master onefileonly
+#save SPEC.INTERSUB=InGaAs_InP_QWIP_1993_v1_intersubband_bias_1p5V.log lmin=5.0 lmax=10.0 nsamp=300
+
+#solve vsubstrate=0.1 vstep=0.1 vfinal=3.5  name=substrate outfile=InGaAs_InP_QWIP_1993_v1_bias_3p5V.sta master onefileonly
+#save SPEC.INTERSUB=InGaAs_InP_QWIP_1993_v1_intersubband_bias_3p5V.log lmin=5.0 lmax=10.0 nsamp=300
+
+
+#quit
+
+## ----------------------------------------------------- For ZB.ONE model -------------------------------------------------------##
+### Generate the solution at bias=0.0V
+#solve    vsubstrate=0.0  name=substrate outfile=QWIP_simple_1D_v1_ZB_ONE_bias_0p0V.sta master onefileonly
+#save qwell.spectrum=QWIP_simple_1D_v1_ZB_ONE_interband_bias_0p0V.log lmin=0.90 lmax=2.0 nsamp=300 
+#save SPEC.INTERSUB=QWIP_simple_1D_v1_ZB_ONE_intersubband_bias_0p0V.log lmin=1.5 lmax=9.0 nsamp=900
+#
+#
+### do a bias sweep by applying positive voltage on substrate
+#load infile=QWIP_simple_1D_v1_ZB_ONE_bias_0p0V.sta master
+#log outfile=QWIP_simple_1D_v1_ZB_ONE_IV_pos_bias_on_subtrate.log
+#
+#solve    vsubstrate=0.0 vstep=0.1 vfinal=1.0  name=substrate outfile=QWIP_simple_1D_v1_ZB_ONE_bias_1p0V.sta master onefileonly
+#save qwell.spectrum=QWIP_simple_1D_v1_ZB_ONE_interband_bias_1p0V.log lmin=0.90 lmax=2.0 nsamp=300 
+#save SPEC.INTERSUB=QWIP_simple_1D_v1_ZB_ONE_intersubband_bias_1p0V.log lmin=1.5 lmax=9.0 nsamp=900 
+#
+#solve    vsubstrate=1.1 vstep=0.1 vfinal=2.0  name=substrate outfile=QWIP_simple_1D_v1_ZB_ONE_bias_2p0V.sta master onefileonly
+#save qwell.spectrum=QWIP_simple_1D_v1_ZB_ONE_interband_bias_2p0V.log lmin=0.90 lmax=2.0 nsamp=300 
+#save SPEC.INTERSUB=QWIP_simple_1D_v1_ZB_ONE_intersubband_bias_2p0V.log lmin=1.5 lmax=9.0 nsamp=900 
+#
+#log off 
+#
+### do a bias sweep by applying negative voltage on substrate
+#load infile=QWIP_simple_1D_v1_ZB_ONE_bias_0p0V.sta master
+#log outfile=QWIP_simple_1D_v1_ZB_ONE_IV_neg_bias_on_subtrate.log
+#
+#solve    vsubstrate=0.0 vstep=-0.1 vfinal=-1.0  name=substrate outfile=QWIP_simple_1D_v1_ZB_ONE_bias_m1p0V.sta master onefileonly
+#save qwell.spectrum=QWIP_simple_1D_v1_ZB_ONE_interband_bias_m1p0V.log lmin=0.90 lmax=2.0 nsamp=300 
+#save SPEC.INTERSUB=QWIP_simple_1D_v1_ZB_ONE_intersubband_bias_m1p0V.log lmin=1.5 lmax=9.0 nsamp=900 
+#
+#solve    vsubstrate=-1.1 vstep=-0.1 vfinal=-2.0  name=substrate outfile=QWIP_simple_1D_v1_ZB_ONE_bias_m2p0V.sta master onefileonly
+#save qwell.spectrum=QWIP_simple_1D_v1_ZB_ONE_interband_bias_m2p0V.log lmin=0.90 lmax=2.0 nsamp=300 
+#save SPEC.INTERSUB=QWIP_simple_1D_v1_ZB_ONE_intersubband_bias_m2p0V.log lmin=1.5 lmax=9.0 nsamp=900 
+#
+#log off
+## -------------------------------------------------------End: ZB.ONE model ----------------------------------------------------------##
+
+
+## ----------------------------------------------------- For ZB.TWO model -------------------------------------------------------##
+## Generate the solution at bias=0.0V
+#solve    vsubstrate=0.0  name=substrate outfile=QWIP_simple_1D_v1_ZB_TWO_bias_0p0V.sta master onefileonly
+#save qwell.spectrum=QWIP_simple_1D_v1_ZB_TWO_interband_bias_0p0V.log lmin=0.90 lmax=2.0 nsamp=300 
+#save SPEC.INTERSUB=QWIP_simple_1D_v1_ZB_TWO_intersubband_bias_0p0V.log lmin=1.5 lmax=9.0 nsamp=900
+#
+#
+## do a bias sweep by applying positive voltage on substrate
+#load infile=QWIP_simple_1D_v1_ZB_TWO_bias_0p0V.sta master
+#log outfile=QWIP_simple_1D_v1_ZB_TWO_IV_pos_bias_on_subtrate.log
+#
+#solve    vsubstrate=0.0 vstep=0.1 vfinal=1.0  name=substrate outfile=QWIP_simple_1D_v1_ZB_TWO_bias_1p0V.sta master onefileonly
+#save qwell.spectrum=QWIP_simple_1D_v1_ZB_TWO_interband_bias_1p0V.log lmin=0.90 lmax=2.0 nsamp=300 
+#save SPEC.INTERSUB=QWIP_simple_1D_v1_ZB_TWO_intersubband_bias_1p0V.log lmin=1.5 lmax=9.0 nsamp=900 
+#
+#solve    vsubstrate=1.1 vstep=0.1 vfinal=2.0  name=substrate outfile=QWIP_simple_1D_v1_ZB_TWO_bias_2p0V.sta master onefileonly
+#save qwell.spectrum=QWIP_simple_1D_v1_ZB_TWO_interband_bias_2p0V.log lmin=0.90 lmax=2.0 nsamp=300 
+#save SPEC.INTERSUB=QWIP_simple_1D_v1_ZB_TWO_intersubband_bias_2p0V.log lmin=1.5 lmax=9.0 nsamp=900 
+#
+#log off 
+#
+## do a bias sweep by applying negative voltage on substrate
+#load infile=QWIP_simple_1D_v1_ZB_TWO_bias_0p0V.sta master
+#log outfile=QWIP_simple_1D_v1_ZB_TWO_IV_neg_bias_on_subtrate.log
+#
+#solve    vsubstrate=0.0 vstep=-0.1 vfinal=-1.0  name=substrate outfile=QWIP_simple_1D_v1_ZB_TWO_bias_m1p0V.sta master onefileonly
+#save qwell.spectrum=QWIP_simple_1D_v1_ZB_TWO_interband_bias_m1p0V.log lmin=0.90 lmax=2.0 nsamp=300 
+#save SPEC.INTERSUB=QWIP_simple_1D_v1_ZB_TWO_intersubband_bias_m1p0V.log lmin=1.5 lmax=9.0 nsamp=900 
+#
+#solve    vsubstrate=-1.1 vstep=-0.1 vfinal=-2.0  name=substrate outfile=QWIP_simple_1D_v1_ZB_TWO_bias_m2p0V.sta master onefileonly
+#save qwell.spectrum=QWIP_simple_1D_v1_ZB_TWO_interband_bias_m2p0V.log lmin=0.90 lmax=2.0 nsamp=300 
+#save SPEC.INTERSUB=QWIP_simple_1D_v1_ZB_TWO_intersubband_bias_m2p0V.log lmin=1.5 lmax=9.0 nsamp=900 
+#
+#log off
+## -------------------------------------------------------End: ZB.TWO model ----------------------------------------------------------##
+
+## ------------------------------------------ For ZB.ONE model + Bound-to-Continuum --------------------------------------------------##
+## Generate the solution at bias=0.0V
+#solve    vsubstrate=0.0  name=substrate outfile=QWIP_simple_1D_v1_ZB_ONE_BCGain_bias_0p0V.sta master onefileonly
+#save qwell.spectrum=QWIP_simple_1D_v1_ZB_ONE_BCGain_interband_bias_0p0V.log lmin=0.90 lmax=2.0 nsamp=300 
+#save SPEC.INTERSUB=QWIP_simple_1D_v1_ZB_ONE_BCGain_intersubband_bias_0p0V.log lmin=1.5 lmax=9.0 nsamp=900
+
+
+## do a bias sweep by applying positive voltage on substrate
+#load infile=QWIP_simple_1D_v1_ZB_ONE_BCGain_bias_0p0V.sta master
+#log outfile=QWIP_simple_1D_v1_ZB_ONE_BCGain_IV_pos_bias_on_subtrate.log
+#
+#solve    vsubstrate=0.0 vstep=0.1 vfinal=1.0  name=substrate outfile=QWIP_simple_1D_v1_ZB_ONE_BCGain_bias_1p0V.sta master onefileonly
+#save qwell.spectrum=QWIP_simple_1D_v1_ZB_ONE_BCGain_interband_bias_1p0V.log lmin=0.90 lmax=2.0 nsamp=300 
+#save SPEC.INTERSUB=QWIP_simple_1D_v1_ZB_ONE_BCGain_intersubband_bias_1p0V.log lmin=1.5 lmax=9.0 nsamp=900 
+#
+#solve    vsubstrate=1.1 vstep=0.1 vfinal=2.0  name=substrate outfile=QWIP_simple_1D_v1_ZB_ONE_BCGain_bias_2p0V.sta master onefileonly
+#save qwell.spectrum=QWIP_simple_1D_v1_ZB_ONE_BCGain_interband_bias_2p0V.log lmin=0.90 lmax=2.0 nsamp=300 
+#save SPEC.INTERSUB=QWIP_simple_1D_v1_ZB_ONE_BCGain_intersubband_bias_2p0V.log lmin=1.5 lmax=9.0 nsamp=900 
+#
+#log off 
+#
+### do a bias sweep by applying negative voltage on substrate
+#load infile=QWIP_simple_1D_v1_ZB_ONE_BCGain_bias_0p0V.sta master
+#log outfile=QWIP_simple_1D_v1_ZB_ONE_BCGain_IV_neg_bias_on_subtrate.log
+#
+#solve    vsubstrate=0.0 vstep=-0.1 vfinal=-1.0  name=substrate outfile=QWIP_simple_1D_v1_ZB_ONE_BCGain_bias_m1p0V.sta master onefileonly
+#save qwell.spectrum=QWIP_simple_1D_v1_ZB_ONE_BCGain_interband_bias_m1p0V.log lmin=0.90 lmax=2.0 nsamp=300 
+#save SPEC.INTERSUB=QWIP_simple_1D_v1_ZB_ONE_BCGain_intersubband_bias_m1p0V.log lmin=1.5 lmax=9.0 nsamp=900 
+#
+#solve    vsubstrate=-1.1 vstep=-0.1 vfinal=-2.0  name=substrate outfile=QWIP_simple_1D_v1_ZB_ONE_BCGain_bias_m2p0V.sta master onefileonly
+#save qwell.spectrum=QWIP_simple_1D_v1_ZB_ONE_BCGain_interband_bias_m2p0V.log lmin=0.90 lmax=2.0 nsamp=300 
+#save SPEC.INTERSUB=QWIP_simple_1D_v1_ZB_ONE_BCGain_intersubband_bias_m2p0V.log lmin=1.5 lmax=9.0 nsamp=900 
+#
+#log off
+## ----------------------------------------------End: ZB.ONE model + Bound-to-continuum ----------------------------------------------##
+
+
+#quit
+
+##Compute device noise
+#log outfile=QWIP_simple_1D_v1_noise.log inport=emitter noise.i.all
+#solve noise frequency=10 fstep=10 mult.f nfsteps=9 
+#log off
+
+
+
+
+#solve    vsubstrate=0.1  vstep=0.1  vfinal=0.2  name=substrate outfile=QWIP_simple_1D_v1_bias_0p2V.sta master onefileonly 
+#save qwell.spectrum=QWIP_simple_1D_v1_emission_photon_bias_0p2V.spc lmin=0.90 lmax=1.70 nsamp=200 
+# 
+#solve    vsubstrate=0.3  vstep=0.1  vfinal=0.5  name=substrate outfile=QWIP_simple_1D_v1_bias_0p5V.sta master onefileonly 
+#save qwell.spectrum=QWIP_simple_1D_v1_emission_photon_bias_0p5V.spc lmin=0.90 lmax=1.70 nsamp=200 
+# 
+#solve    vsubstrate=0.6  vstep=0.1  vfinal=0.8  name=substrate outfile=QWIP_simple_1D_v1_bias_0p8V.sta master onefileonly 
+#save qwell.spectrum=QWIP_simple_1D_v1_emission_photon_bias_0p8V.spc lmin=0.90 lmax=1.70 nsamp=200 
+# 
+#solve    vsubstrate=0.9  vstep=0.1  vfinal=1.0  name=substrate outfile=QWIP_simple_1D_v1_bias_1p0V.sta master onefileonly 
+#save qwell.spectrum=QWIP_simple_1D_v1_emission_photon_bias_1p0V.spc lmin=0.90 lmax=1.70 nsamp=200 
+#
+#solve    vsubstrate=1.05  name=substrate outfile=QWIP_simple_1D_v1_bias_1p05V.sta master onefileonly 
+#save qwell.spectrum=QWIP_simple_1D_v1_emission_photon_bias_1p05V.spc lmin=0.90 lmax=1.70 nsamp=200
+#
+#solve    vsubstrate=1.1  name=substrate outfile=QWIP_simple_1D_v1_bias_1p1V.sta master onefileonly 
+#save qwell.spectrum=QWIP_simple_1D_v1_emission_photon_bias_1p1V.spc lmin=0.90 lmax=1.70 nsamp=200 
+#
+#solve    vsubstrate=1.15  name=substrate outfile=QWIP_simple_1D_v1_bias_1p15V.sta master onefileonly 
+#save qwell.spectrum=QWIP_simple_1D_v1_emission_photon_bias_1p15V.spc lmin=0.90 lmax=1.70 nsamp=200
+#
+#solve    vsubstrate=1.2  name=substrate outfile=QWIP_simple_1D_v1_bias_1p2V.sta master onefileonly 
+#save qwell.spectrum=QWIP_simple_1D_v1_emission_photon_bias_1p2V.spc lmin=0.90 lmax=1.70 nsamp=200 
+
+#solve    vsubstrate=1.1  name=substrate outfile=LED_WithSub_bias_1p1V.sta master onefileonly 
+#save spectrum=LED_WithSub_emission_photon_bias_1p1V.spc lmin=0.90 lmax=1.70 nsamp=200 
+
+#solve    vsubstrate=1.2  name=substrate outfile=LED_WithSub_bias_1p2V.sta master onefileonly 
+#save spectrum=LED_WithSub_emission_photon_bias_1p2V.spc lmin=0.90 lmax=1.70 nsamp=200 
+#
+#solve    vsubstrate=1.3  name=substrate outfile=LED_WithSub_bias_1p3V.sta master onefileonly 
+#save spectrum=LED_WithSub_emission_photon_bias_1p3V.spc lmin=0.90 lmax=1.70 nsamp=200 
+#
+#solve    vsubstrate=1.4  name=substrate outfile=LED_WithSub_bias_1p4V.sta master onefileonly 
+#save spectrum=LED_WithSub_emission_photon_bias_1p4V.spc lmin=0.90 lmax=1.70 nsamp=200 
+#
+#solve    vsubstrate=1.5  name=substrate outfile=LED_WithSub_bias_1p5V.sta master onefileonly 
+#save spectrum=LED_WithSub_emission_photon_bias_1p5V.spc lmin=0.90 lmax=1.70 nsamp=200
+
+ 
+#solve    vsubstrate=1.1  vstep=0.1  vfinal=1.5  name=substrate outfile=LED_WithSub_bias_1p5V.sta master onefileonly 
+#save spectrum=LED_WithSub_emission_photon_bias_1p5V.spc lmin=0.90 lmax=1.70 nsamp=200 
+# 
+#solve    vsubstrate=1.6  vstep=0.1  vfinal=1.8  name=substrate outfile=LED_WithSub_bias_1p8V.sta master onefileonly 
+#save spectrum=LED_WithSub_emission_photon_bias_1p8V.spc lmin=0.90 lmax=1.70 nsamp=200 
+# 
+#solve    vsubstrate=1.9  vstep=0.1  vfinal=2.0  name=substrate outfile=LED_WithSub_bias_2p0V.sta master onefileonly 
+#save spectrum=LED_WithSub_emission_photon_bias_2p0V.spc lmin=0.90 lmax=1.70 nsamp=200 
+# 
+# 
+# 
+#tonyplot -overlay LED_WithSub_emission_photon_bias_0p2V.spc LED_WithSub_emission_photon_bias_0p5V.spc \
+#                  LED_WithSub_emission_photon_bias_0p8V.spc LED_WithSub_emission_photon_bias_1p0V.spc \
+#                  LED_WithSub_emission_photon_bias_1p5V.spc LED_WithSub_emission_photon_bias_1p8V.spc \
+#                  LED_WithSub_emission_photon_bias_2p0V.spc 
+ 
+ 
+#solve    vsubstrate=0.0  name=substrate outfile=LED_WithSub_bias_0p0V.sta master 
+ 
+#solve    vsubstrate=0.1  vstep=0.1  vfinal=1.0  name=substrate outfile=LED_WithSub_bias_1p0V.sta master onefileonly 
+#save spectrum=LED_WithSub_emission_photon_bias_1p0V.spc lmin=0.90 lmax=1.70 nsamp=200 
+ 
+#solve    vsubstrate=1.1  vstep=0.1  vfinal=1.5  name=substrate outfile=LED_WithSub_bias_1p5V.sta master onefileonly 
+#save spectrum=LED_WithSub_emission_photon_bias_1p5V.spc lmin=0.90 lmax=1.70 nsamp=200 
+ 
+#solve    vsubstrate=1.6  vstep=0.1  vfinal=2.0  name=substrate outfile=LED_WithSub_bias_2p0V.sta master onefileonly 
+#save spectrum=LED_WithSub_emission_photon_bias_2p0V.spc lmin=0.90 lmax=1.70 nsamp=200 
+ 
+#solve    vsubstrate=2.1  vstep=0.1  vfinal=3.0  name=substrate outfile=LED_WithSub_bias_3p0V.sta master onefileonly 
+#save spectrum=LED_WithSub_emission_photon_bias_3p0V.spc lmin=0.90 lmax=1.70 nsamp=200 
+ 
+#solve    vsubstrate=3.1  vstep=0.1  vfinal=4.0  name=substrate outfile=LED_WithSub_bias_4p0V.sta master onefileonly 
+#save spectrum=LED_WithSub_emission_photon_bias_4p0V.spc lmin=0.90 lmax=1.70 nsamp=200 
+ 
+#solve    vsubstrate=4.1  vstep=0.1  vfinal=6.0  name=substrate outfile=LED_WithSub_bias_6p0V.sta master onefileonly 
+#save spectrum=LED_WithSub_emission_photon_bias_6p0V.spc lmin=0.90 lmax=1.70 nsamp=200 
+ 
+ 
+#tonyplot LED_WithSub_Both_QWs_IV.log 
+ 
+#tonyplot -overlay LED_WithSub_emission_photon_bias_1p0V.spc \
+#                  LED_WithSub_emission_photon_bias_1p5V.spc \
+#                  LED_WithSub_emission_photon_bias_2p0V.spc \
+#                  LED_WithSub_emission_photon_bias_3p0V.spc \
+#                  LED_WithSub_emission_photon_bias_4p0V.spc \
+#                  LED_WithSub_emission_photon_bias_6p0V.spc 
+ 
