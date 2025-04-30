@@ -8,7 +8,7 @@ set TL = 300.0
 # --------------- All the key fitting parameters identified -----------------#
 set dEc_per = 0.45
 set x_Ga_qwell = 0.401
-set num_traveling_states = 20
+set num_traveling_states = 1
 #NOTE: the room-temperature simulations do not need the following two parameters.
 set eg300_InGaAs = 0.614
 set eg300_fit_offset_InGaAs = 0.12
@@ -23,9 +23,9 @@ set eg300_fit_offset_InGaAs = 0.12
 #       but I do not think they will work.
 # The grid number parameter below were tested and none of them worked.
 #set QM_solver_grid = 150
-set QM_solver_grid = 30
+#set QM_solver_grid = 30
 #set QM_solver_grid = 50
-#set QM_solver_grid = 40
+set QM_solver_grid = 80
 #------------------------------------------------------------------#
 
 
@@ -434,7 +434,8 @@ output con.band val.band band.param
 solve init 
 
 #solve vsubstrate=0.0  name=substrate outfile=NwQWIP_Radial1D_v1_bias_0p0V.sta master onefileonly
-solve vsubstrate=0.0  name=substrate outfile=NwQWIP_Radial1D_v1_bias_0p0V_intraband.sta master onefileonly
+#solve vsubstrate=0.0  name=substrate outfile=NwQWIP_Radial1D_v1_bias_0p0V_intraband.sta master onefileonly
+solve vsubstrate=0.0  
 #save qwell.spectrum=NwQWIP_Radial1D_v1_ZBTWO_interband_bias_0p0V.log lmin=0.90 lmax=2.3 nsamp=300 
 #save qwell.spectrum=NwQWIP_Radial1D_v1_ZBONE_interband_bias_0p0V.log lmin=1.0 lmax=1.8 nsamp=300 
 #save qwell.spectrum=NwQWIP_Radial1D_v1_ZBONE_interband_bias_0p0V_300K.log lmin=1.0 lmax=1.8 nsamp=300 
@@ -444,9 +445,12 @@ save SPEC.INTERSUB="intraband_NwQWIP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc
 
 # extract and save the data
 go internal
+#get_data infile="intraband_NwQWIP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.log" \
+#         outfile="extracted_intraband_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.dat" \
+#         name="Wavelength;Gain (TM, electrons) (well 1) (1/cm)" 
 get_data infile="intraband_NwQWIP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.log" \
          outfile="extracted_intraband_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.dat" \
-         name="Wavelength;Gain (TM, electrons) (well 1) (1/cm)" 
+         name="Wavelength;Gain (TM, electrons) (well 1) (1/cm);Spontaneous emission (TM, electrons) (well 1) (1/(s cm3 eV))" 
 
 quit
 
