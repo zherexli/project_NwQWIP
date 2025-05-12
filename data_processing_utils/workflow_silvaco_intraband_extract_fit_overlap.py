@@ -16,7 +16,7 @@ loss_data_intraband[:,2] = loss_data_intraband[:,2]/loss_data_intraband[:,2].max
 
 # set the MSE threshold value for finding the overlapped region
 # The routine will find the overlapped ['xGa'; 'dEcPer'] pairs given the threshold value below
-loss_threshold = 0.25
+loss_threshold = 0.05
 loss_interband_red = loss_data_interband[loss_data_interband[:,2]<=loss_threshold,:]
 loss_intraband_red = loss_data_intraband[loss_data_intraband[:,2]<=loss_threshold,:]
 
@@ -83,9 +83,11 @@ exp_intraband[:,1] = exp_intraband[:,1]/exp_intraband[:,1].max()
 # For interband simulation data, the data format is: 
 # xGa dEcPer  PL_normalised
 sim_src_interband = np.genfromtxt("all_simulation_data_processed_interband_PL_300K.txt",skip_header=1)
+sim_src_interband_wave = np.genfromtxt("all_simulation_data_processed_interband_Wavelength.txt",skip_header=1)
 # For intraband simulation data, the data format is: 
 # xGa dEcPer  AbsCoeff_normalised
 sim_src_intraband = np.genfromtxt("all_simulation_data_processed_intraband_GainTMe_300K.txt",skip_header=1)
+sim_src_intraband_wave = np.genfromtxt("all_simulation_data_processed_intraband_Wavelength.txt",skip_header=1)
 # Load the source loss data 
 # 1. interband data
 loss_src_interband = np.genfromtxt("all_loss_data_processed_interband_PL_300K.txt",skip_header=1)
@@ -113,7 +115,7 @@ loss_grid_intraband = np.reshape(loss_grid_intraband,(num_dEc_intraband,num_xGa_
 
 fig1=plt.figure(1)
 ax1_1 = fig1.add_subplot(121)
-pc1_1=ax1_1.pcolormesh(xGa_grid_interband,dEc_grid_interband,loss_grid_interband,vmin=0,vmax=1)
+pc1_1=ax1_1.pcolormesh(xGa_grid_interband,dEc_grid_interband,loss_grid_interband,vmin=0,vmax=1,cmap='GnBu_r')
 #ax1.set_aspect('equal',adjustable='box')
 ax1_1.set_xlabel(r"$x$ for In$_{1-x}$Ga$_x$As",fontsize=16)
 ax1_1.set_ylabel(r"$\Delta$E$_c$ as a fraction",fontsize=16)
@@ -129,7 +131,7 @@ sc11=ax1_1.scatter(loss_intraband_overlapped[:,0],loss_intraband_overlapped[:,1]
 
 
 ax1_2 = fig1.add_subplot(122)
-pc1_2=ax1_2.pcolormesh(xGa_grid_intraband,dEc_grid_intraband,loss_grid_intraband,vmin=0,vmax=1)
+pc1_2=ax1_2.pcolormesh(xGa_grid_intraband,dEc_grid_intraband,loss_grid_intraband,vmin=0,vmax=1,cmap='PuRd_r')
 #ax1.set_aspect('equal',adjustable='box')
 ax1_2.set_xlabel(r"$x$ for In$_{1-x}$Ga$_x$As",fontsize=16)
 ax1_2.set_ylabel(r"$\Delta$E$_c$ as a fraction",fontsize=16)
@@ -148,14 +150,20 @@ fit_best_idx_interband  = np.isclose(sim_src_interband[:,0],loss_intraband_overl
 fit_best_data_interband = sim_src_interband[fit_best_idx_interband,2:]
 fit_best_data_interband = np.ravel(fit_best_data_interband)
 
+fit_best_data_interband_wave = sim_src_interband_wave[fit_best_idx_interband,2:]
+fit_best_data_interband_wave = np.ravel(fit_best_data_interband_wave)
+
 fit_best_idx_intraband  = np.isclose(sim_src_intraband[:,0],loss_intraband_overlapped[plt_fit_best_idx,0]) & np.isclose(sim_src_intraband[:,1],loss_intraband_overlapped[plt_fit_best_idx,1])
 fit_best_data_intraband = sim_src_intraband[fit_best_idx_intraband,2:]
 fit_best_data_intraband = np.ravel(fit_best_data_intraband)
 
+fit_best_data_intraband_wave = sim_src_intraband_wave[fit_best_idx_intraband,2:]
+fit_best_data_intraband_wave = np.ravel(fit_best_data_intraband_wave)
+
 ax2_1 = fig2.add_subplot(121)
 ax2_1.plot(exp_interband[:,0],exp_interband[:,1],'ro',markersize=5,label='Experiment')
 #ax2.plot(wavelength_exp,data_exp,'ro',markersize=5,label='Experiment')
-ax2_1.plot(sim_src_interband[0,2:],fit_best_data_interband,'k-',linewidth=2.5,label='Best fit: Sim')
+ax2_1.plot(fit_best_data_interband_wave,fit_best_data_interband,'k-',linewidth=2.5,label='Best fit: Sim')
 ax2_1.legend(loc='best',fontsize=15)
 ax2_1.tick_params(axis='both',which='both',direction='in',labelsize=16)
 ax2_1.set_xlim([0.95,1.85])
@@ -166,7 +174,7 @@ ax2_1.set_ylabel(r"PL (Normalised)",fontsize=16)
 ax2_2 = fig2.add_subplot(122)
 ax2_2.plot(exp_intraband[:,0],exp_intraband[:,1],'ro',markersize=5,label='Experiment')
 #ax2.plot(wavelength_exp,data_exp,'ro',markersize=5,label='Experiment')
-ax2_2.plot(sim_src_intraband[0,2:],fit_best_data_intraband,'k-',linewidth=2.5,label='Best fit: Sim')
+ax2_2.plot(fit_best_data_intraband_wave,fit_best_data_intraband,'k-',linewidth=2.5,label='Best fit: Sim')
 ax2_2.legend(loc='best',fontsize=15)
 ax2_2.tick_params(axis='both',which='both',direction='in',labelsize=16)
 ax2_2.set_xlim([1.95,6.05])
