@@ -13,7 +13,7 @@ from glob import glob
 sim_files_all = glob("extracted_xGa_*_dEcPer_*.dat")
 # each *dat file has the following data format:
 # xGa dEcPer "Wavelength" "Gain (TM, electrons) (well 1) (1/cm)" "Spontaneous emission (TM, electrons) (well 1) (1/(s cm3 eV))"
-sim_data_processed_wavelength = np.empty((0,),dtype=np.float64) # for Gain TM
+sim_data_processed_wavelength = np.empty((0,),dtype=np.float64)# save wavelength data separately
 sim_data_processed = np.empty((0,),dtype=np.float64)
 for sim_file in sim_files_all:
     print(f"**Info: process data: {sim_file}")
