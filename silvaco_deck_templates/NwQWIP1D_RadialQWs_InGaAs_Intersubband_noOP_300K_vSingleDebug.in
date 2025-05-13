@@ -24,7 +24,7 @@ set eg300_fit_offset_InGaAs = 0.12
 # The grid number parameter below were tested and none of them worked.
 #set QM_solver_grid = 150
 #set QM_solver_grid = 30
-set QM_solver_grid = 50
+set QM_solver_grid =80
 #set QM_solver_grid = 40
 #------------------------------------------------------------------#
 

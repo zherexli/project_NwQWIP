@@ -1,0 +1,21 @@
+go internal 
+load infile=NwQWIP1D_RadialQWs_InGaAs_Intersubband_noOP_300K_vSweep.in
+
+# Below shows the fitting parameters defined in the deck template file
+## --------------- All the key fitting parameters identified -----------------#
+# set dEc_per = 0.44
+# set x_Ga_qwell = 0.344
+## ---------------------------------------------------------------------------#
+
+# for xGa, try the range between 0.2 to 0.7
+# for xGa, use np.linspace(0.203,0.707,num=57) to generate the list
+# for dEc, use np.linspace(0.05,0.95,num=19) to generate the list
+sweep parameter=x_Ga_qwell type=list data="0.203, 0.212, 0.221, 0.23, 0.239, 0.248, 0.257, 0.266, 0.275, 0.284, 0.293, 0.302, 0.311, 0.32, 0.329, 0.338, 0.347, 0.356, 0.365, 0.374, 0.383, 0.392, 0.401, 0.41, 0.419, 0.428, 0.437, 0.446, 0.455, 0.464, 0.473, 0.482, 0.491, 0.5, 0.509, 0.518, 0.527, 0.536, 0.545, 0.554, 0.563, 0.572, 0.581, 0.59, 0.599, 0.608, 0.617, 0.626, 0.635, 0.644, 0.653, 0.662, 0.671, 0.68, 0.689, 0.698, 0.707" \
+      parameter=dEc_per type=list data="0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95"
+
+
+
+quit
+
+
+
