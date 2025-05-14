@@ -6,9 +6,9 @@ set TL = 300.0
 #set TL = 180.0
 
 # --------------- All the key fitting parameters identified -----------------#
-set dEc_per = 0.75
-set x_Ga_qwell = 0.203
-set num_traveling_states = 1
+set dEc_per = 0.7
+set x_Ga_qwell = 0.356
+set num_BtoC_coupling_states = 1
 #NOTE: the room-temperature simulations do not need the following two parameters.
 set eg300_InGaAs = 0.614
 set eg300_fit_offset_InGaAs = 0.12
@@ -16,7 +16,7 @@ set eg300_fit_offset_InGaAs = 0.12
 
 # ---- History of the trial of the parameter 'QM_solver_grid' ---- #
 # NOTE: just setting 'QM_solver_grid = 30' is good enough to solve for
-#       'num_traveling_states=1'
+#       'num_BtoC_coupling_states=1'
 #set QM_solver_grid = 30
 # Other grid number that was trialed by failed:
 # NOTE: for grid number between 70 ~ 140, I have not tested; 
@@ -24,7 +24,7 @@ set eg300_fit_offset_InGaAs = 0.12
 # The grid number parameter below were tested and none of them worked.
 #set QM_solver_grid = 150
 #set QM_solver_grid = 30
-set QM_solver_grid =80
+set QM_solver_grid = 80
 #set QM_solver_grid = 40
 #------------------------------------------------------------------#
 
@@ -318,6 +318,13 @@ material name=rg_qwell gcb=2 edb=0.005
 set lorenzian_gamma0 = 10e-3
 #set lorenzian_gamma0 = 1.5e-2
 material well.gamma0=$lorenzian_gamma0
+# define the carrier capture time for the capture-escape model
+# WELL.TAUN sets the lifetime of a 3D carrier due to its capture by the wells
+# by emission of a phonon. This lifetime dominates at 300 K with a value of
+# roughly 1 ps [Ref-2].
+# Ref-2. H. Schneider, H.C. Liu, "Quantum Well Infrared Photodetectors: 
+#        Physics and Applications", Springer-Verlag, Berlin, (2007)
+material name=rg_qwell  well.taun = 1.0e-12
 
 #TODO: to be extracted perhaps from the kp_8_band{} parameters in Nextnano
 material name=rg_qwell  ep.mbulk=22.94 
@@ -371,40 +378,13 @@ models fermi srh cubic35 print
 
 ## trial #1 - solve for the superlattice; but this method cannot generate intersubband spectrum!
 ## Extra Note 1: setting 'lorentz' in both 'rg_qwell' and 'rg_barrier' or just in 'rg_qwell' seems to give the same absorption profile.
-models name=rg_qwell   nslatt sl.number=1 slatt.cnts=$num_traveling_states nqwell well.ny=$QM_solver_grid zb.one well.cnbs=20 intersub.spon well.capt well.selfcon lorentz
-models name=rg_barrier nslatt sl.number=1 slatt.cnts=$num_traveling_states nqwell well.ny=$QM_solver_grid zb.one well.cnbs=20 intersub.spon well.capt well.selfcon lorentz
-models name=rg_bulk_outer well.margin=0.0
-models name=rg_bulk_sub   well.margin=0.0
+models name=rg_qwell       nslatt slatt.cnts=$num_BtoC_coupling_states nqwell well.ny=$QM_solver_grid zb.one well.cnbs=20 
+models name=rg_barrier     nslatt slatt.cnts=$num_BtoC_coupling_states nqwell well.ny=$QM_solver_grid zb.one well.cnbs=20 
+models name=rg_qwell       spontaneous intersub.spon well.capt well.selfcon lorentz
+models name=rg_barrier     spontaneous intersub.spon well.capt well.selfcon lorentz
+models name=rg_bulk_outer  well.margin=0.0
+models name=rg_bulk_sub    well.margin=0.0
 
-# These are the old command for the inter-band transision
-#models name=rg_qwell   qwell well.ny=$QM_solver_grid zb.one well.cnbs=20 well.vnbs=20 spontaneous well.capt well.selfcon lorentz
-#models name=rg_barrier qwell well.ny=$QM_solver_grid zb.one well.cnbs=20 well.vnbs=20 spontaneous well.capt well.selfcon lorentz
-#models name=rg_qwell   slatt sl.number=1 slatt.cnts=1 slatt.vnts=1 
-#models name=rg_barrier slatt sl.number=1 slatt.cnts=1 slatt.vnts=1 
-
-#models name=rg_bulk_outer well.margin=0.0
-#models name=rg_bulk_sub   well.margin=0.0
-
-## trial #2 - solve all these QWs individually...
-#models name=rg_qwell qwell zb.one well.ny=$QM_solver_grid well.cnbs=5 well.vnbs=1 sp.geometry=1DY INTERSUB.SPONT well.capt well.selfcon
-#models name=rg_qwell nqwell zb.one well.cnbs=20 sp.geometry=1DY INTERSUB.SPONT well.capt well.selfcon
-#models name=rg_barrier nqwell zb.one well.cnbs=20 sp.geometry=1DY INTERSUB.SPONT well.capt well.selfcon
-#models name=rg_bulk well.margin=0.00
-
-
-# define QW specific models with Zincblende one (valence) band model, i.e. "ZB.ONE" (i.e. only heavy hole)
-#models name=rg_InGaAsP_qw1  qwell spontaneous INTERSUB.SPONT well.capt zb.one well.cnbs=6 well.vnbs=6 sp.geometry=1DY well.ny=$"QM_solver_grid" qwnum=1 
-
-# define QW specific models with Zincblende two (valence) band model, i.e. "Li" (i.e. heavy hole + light hole)
-#models name=rg_InGaAsP_qw1 qwell spontaneous INTERSUB.SPONT well.selfcon well.capt li well.cnbs=6 well.vnbs=6 sp.geometry=1DY well.ny=$"QM_solver_grid" qwnum=1 
-
-# define QW specific models with Zincblende one (valence) band model, i.e. "ZB.ONE" (i.e. only heavy hole)
-#models name=rg_InGaAsP_qw1 qwell spontaneous INTERSUB.SPONT qwell.bcgain well.capt zb.one well.cnbs=6 well.vnbs=6 sp.geometry=1DY well.ny=$"QM_solver_grid" qwnum=1 
-
-
-#models name=QW_Raidal_Left  qwell led spontaneous well.capt well.inplane well.selfcon well.npred=7 zb.one well.cnbs=6 well.vnbs=6 sp.geometry=1DY well.ny=$"QM_solver_grid" qwnum=1 
-#models name=QW_Raidal_Right qwell led spontaneous well.capt well.inplane well.selfcon well.npred=7 zb.one well.cnbs=6 well.vnbs=6 sp.geometry=1DY well.ny=$"QM_solver_grid" qwnum=2 
- 
  
 #define constant mobility 
 mobility name=rg_barrier         mun=120 mup=100  
@@ -415,7 +395,21 @@ mobility name=rg_qwell           mun=150 mup=120
 
 # Enable the command below if you do a single run to save the device structure; 
 # otherwise, save the time and not save a device structure 
-#save outf=NwQWIP_Radial1D_device.str 
+save outf=NwQWIP1D_RadialQWs_QausiDevice_noOP.str 
+
+# 
+#------------------------------------------------------------------------ 
+#Section 10: set up optical source 
+#------------------------------------------------------------------------ 
+# We use the transfer matrix method (TR.MATRIX) to fully consider multiple
+# reflections and coherent light propagation within the active layer. Since
+# the device is assumed uniform in the lateral direction, this 1D solution 
+# to the Helmholtz equation can be applied at all beam angles. Since 
+# TM absorption occurs only for non-normal incidence, we set the ANGLE 
+# of the beam to 120, which is 30 degrees from the normal.
+#
+#beam num=1 qwip tr.matrix  tblack=300 x.origin =$nw_core_height y.origin=-0.5-$left_bulk_width \
+#wavelength=4.0 angle=160 verbose 
 
 # ------------------------------------------------- END: basic device setup -----------------------------------------------------------------------------------------------## 
  
@@ -426,30 +420,27 @@ method maxtrap=20   itlimit=25
  
  
 #define some output for standard structure files 
-output con.band val.band band.param  
+output con.band val.band band.param photogen
  
 #define some special probes 
 #probe name=mybands_QW_radial y=$"INP_PPLUS_CORE_HEIGHT"/2.0 x.min= -$"INP_NPLUS_SHELL_RADIUS" x.max=$"INP_PPLUS_CORE_RADIUS" con.band val.band qfn qfp nwell pwell state=1  
  
 solve init 
-
-#solve vsubstrate=0.0  name=substrate outfile=NwQWIP_Radial1D_v1_bias_0p0V.sta master onefileonly
-solve vsubstrate=0.0  name=substrate outfile=NwQWIP_Radial1D_v1_bias_0p0V_intraband.sta master onefileonly
-#solve vsubstrate=0.0  
-#save qwell.spectrum=NwQWIP_Radial1D_v1_ZBTWO_interband_bias_0p0V.log lmin=0.90 lmax=2.3 nsamp=300 
-#save qwell.spectrum=NwQWIP_Radial1D_v1_ZBONE_interband_bias_0p0V.log lmin=1.0 lmax=1.8 nsamp=300 
-#save qwell.spectrum=NwQWIP_Radial1D_v1_ZBONE_interband_bias_0p0V_300K.log lmin=1.0 lmax=1.8 nsamp=300 
-#save qwell.spectrum=NwQWIP_Radial1D_v1_ZBONE_interband_bias_0p0V_300K.log lmin=1.0 lmax=1.8 nsamp=300 
-save SPEC.INTERSUB="intraband_NwQWIP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.log" lmin=2.0 lmax=6.0 nsamp=600 
+#log outf=NwQWIP1D_RadialQWs_QuasiDevice_IV_dark_fb.log
+#log outf=NwQWIP1D_RadialQWs_QuasiDevice_IV_dark_rb.log
+solve vsubstrate=0.0  name=substrate outfile=NwQWIP1D_RadialQWs_QuasiDevice_noOP_dark_bias_0p0V.sta master onefileonly
+save SPEC.INTERSUB="intraband_NwQWIP_noOP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'_numBtC_$'num_BtoC_coupling_states'.log" lmin=2.0 lmax=6.0 nsamp=600 
 #save SPEC.INTERSUB=NwQWIP_Radial1D_v1_intersubband_bias_0p0V_300K.log lmin=2.0 lmax=6.0 nsamp=800
+log off
+quit
 
 # extract and save the data
-go internal
-get_data infile="intraband_NwQWIP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.log" \
-         outfile="extracted_intraband_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.dat" \
-         name="Wavelength;Gain (TM, electrons) (well 1) (1/cm)" 
-
-quit
+#go internal
+#get_data infile="intraband_NwQWIP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'_numBtC_$'num_BtoC_coupling_states'.log" \
+#         outfile="extracted_intraband_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'_numBtC_$'num_BtoC_coupling_states'.dat" \
+#         name="Wavelength;Gain (TM, electrons) (well 1) (1/cm)" 
+#
+#quit
 
 ## NOTE: the extraction function currently does not work!
 ## It cannot extract any quantities from a spectrum file!
