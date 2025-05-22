@@ -6,6 +6,7 @@ import os
 import argparse
 parser=argparse.ArgumentParser()
 parser.add_argument("-l","--load_processed_data",action='store_true',default=False,help="Instruct the program if it can skip processing data and simply load the saved data set.")
+parser.add_argument("-pp","--plot_peak_GainTM",action='store_true',default=False,help="Instruct the program if it needs to plot extra information on the simulated peak absorption coefficients.")
 args=parser.parse_args()
 
 # load experimental data
@@ -186,5 +187,32 @@ if os.path.exists(output_file_name) and args.load_processed_data==True:
     ax2.set_xlabel(r"Wavelength ($\mu$m)",fontsize=16)
     ax2.set_ylabel(r"Responsivity (Normalised)",fontsize=16)
 #end if
+
+if args.plot_peak_GainTM is True:
+
+    peak_GainTM_data = np.genfromtxt("all_simulation_data_processed_PeakGainTMe.txt",skip_header=1)
+    # the data has the following format:
+    # xGa dEcPer  Wavelength_at_peak_gain[um] peak_TMGain[1/cm]
+    ## prepare the plot
+    xGa_grid_peakGain = peak_GainTM_data[:,0]
+    dEc_grid_peakGain = peak_GainTM_data[:,1]
+
+    xGa_grid_peakGain = np.reshape(peak_GainTM_data[:,0],(num_dEc,num_xGa),order='F')
+    dEc_grid_peakGain = np.reshape(peak_GainTM_data[:,1],(num_dEc,num_xGa),order='F')
+    peak_gain_grid = np.reshape(peak_GainTM_data[:,3],(num_dEc,num_xGa),order='F')
+    
+    fig2=plt.figure(2)
+    ax3 = fig2.add_subplot(111)
+    pc3=ax3.pcolormesh(xGa_grid_peakGain,dEc_grid_peakGain,peak_gain_grid)
+    #ax3.set_aspect('equal',adjustable='box')
+    ax3.set_xlabel(r"$x$ for In$_{1-x}$Ga$_x$As",fontsize=16)
+    ax3.set_ylabel(r"$\Delta$E$_c$ as a fraction",fontsize=16)
+    ax3.tick_params(axis='both',which='both',direction='in',labelsize=16)
+    ax3.set_xlim([0,1])
+    ax3.set_ylim([0,1])
+    #cb1=fig1.colorbar(pc1,ticks=np.linspace(Eg_nm.min(),Eg_nm.max(),num=7),format='%i')
+    cb3=fig2.colorbar(pc3)
+    cb3.set_label(label=r'Absorp Coeff [cm$^{-1}$]',fontsize=18)
+
 
 plt.show()
