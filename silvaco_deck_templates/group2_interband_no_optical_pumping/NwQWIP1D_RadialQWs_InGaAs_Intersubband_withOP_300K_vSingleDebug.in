@@ -6,8 +6,8 @@ set TL = 300.0
 #set TL = 180.0
 
 # --------------- All the key fitting parameters identified -----------------#
-set dEc_per = 0.7
-set x_Ga_qwell = 0.356
+set dEc_per = 0.75
+set x_Ga_qwell = 0.248
 set num_BtoC_coupling_states = 1
 #NOTE: the room-temperature simulations do not need the following two parameters.
 set eg300_InGaAs = 0.614
@@ -16,7 +16,7 @@ set eg300_fit_offset_InGaAs = 0.12
 
 # ---- History of the trial of the parameter 'QM_solver_grid' ---- #
 # NOTE: just setting 'QM_solver_grid = 30' is good enough to solve for
-#       'num_BtoC_coupling_states=1'
+#       'num_traveling_states=1'
 #set QM_solver_grid = 30
 # Other grid number that was trialed by failed:
 # NOTE: for grid number between 70 ~ 140, I have not tested; 
@@ -24,9 +24,10 @@ set eg300_fit_offset_InGaAs = 0.12
 # The grid number parameter below were tested and none of them worked.
 #set QM_solver_grid = 150
 #set QM_solver_grid = 30
+#set QM_solver_grid = 50
 set QM_solver_grid = 80
-#set QM_solver_grid = 40
 #------------------------------------------------------------------#
+
 
 
 #------------------------------------------------------------------------ 
@@ -37,26 +38,26 @@ set QM_solver_grid = 80
 ##set barrier_width = 0.05
 
 # Define device dimensions with superlattice QWs; unit=[um]
-set qwell_width_1   = 4.8e-3  # Width of the quantum well 
-set qwell_width_2   = 4.3e-3  # Width of the quantum well 
-set qwell_width_3   = 3.5e-3  # Width of the quantum well 
-set qwell_width_4   = 2.8e-3  # Width of the quantum well 
-set qwell_width_5   = 2.6e-3  # Width of the quantum well 
+set qwell_width_1   = 2.57e-3  # Width of the quantum well 
+set qwell_width_2   = 2.57e-3  # Width of the quantum well 
+set qwell_width_3   = 2.94e-3  # Width of the quantum well 
+set qwell_width_4   = 2.94e-3  # Width of the quantum well 
+set qwell_width_5   = 2.20e-3  # Width of the quantum well 
 
 set barrier_width_0   = 25.0e-3  # Width of the barrier     
-set barrier_width_1   = 50.0e-3  # Width of the barrier      
-set barrier_width_2   = 36.8e-3  # Width of the barrier      
-set barrier_width_3   = 31.0e-3  # Width of the barrier      
-set barrier_width_4   = 25.5e-3  # Width of the barrier      
-set barrier_width_5   = 25.5e-3  # Width of the barrier      
+set barrier_width_1   = 25.0e-3  # Width of the barrier      
+set barrier_width_2   = 22.6e-3  # Width of the barrier      
+set barrier_width_3   = 27.0e-3  # Width of the barrier      
+set barrier_width_4   = 21.0e-3  # Width of the barrier      
+set barrier_width_5   = 21.0e-3  # Width of the barrier      
 
-set InP_outer_shell = 33.0e-3
-set InP_core_radius = 92.5e-3
+set InP_outer_shell = 61.0e-3
+set InP_core_radius = 127.0e-3
 
 set left_bulk_width    = $InP_outer_shell-$barrier_width_5
 set right_bulk_width   = $InP_core_radius-$barrier_width_0
 
-# The height of the inner InP core is 1018 nm.
+# The height of the inner InP core is 1195 nm.
 # let's just take 1um as the height
 set nw_core_height  = 1.0
 set nw_facet_length = 0.03
@@ -76,7 +77,7 @@ set gs_barrier = 2.0e-3
 set gs_qwell = 4.0e-4
 
 #** set number of refined grids for Schrodinger solver 
-#set QM_solver_grid = 30
+#set QM_solver_grid = 40
  
 # 
 #------------------------------------------------------------------------ 
@@ -102,14 +103,8 @@ set gs_qwell = 4.0e-4
 ## This gives a bandgap of ~0.604eV
 #set x_Ga_qwell = 0.333
 
-## This gives a bandgap of ~0.623eV
+# This gives a bandgap of ~0.623eV
 #set x_Ga_qwell = 0.354
-
-## This gives a bandgap of ~0.633eV
-#set x_Ga_qwell = 0.365
-
-# This gives a bandgap of ~0.614eV
-#set x_Ga_qwell = 0.344
 
 # doping concentration; unit=[1/cm^3] 
 set dpconc_bulk_contact = 1.0e16
@@ -386,16 +381,18 @@ models name=rg_bulk_outer  well.margin=0.0
 models name=rg_bulk_sub    well.margin=0.0
 
  
+ 
 #define constant mobility 
 mobility name=rg_barrier         mun=120 mup=100  
 mobility name=rg_bulk_outer      mun=120 mup=100  
 mobility name=rg_bulk_sub        mun=120 mup=100  
 mobility name=rg_qwell           mun=150 mup=120
 
-
+ 
 # Enable the command below if you do a single run to save the device structure; 
 # otherwise, save the time and not save a device structure 
-save outf=NwQWIP1D_RadialQWs_QausiDevice_noOP.str 
+save outf=NwQWIP1D_RadialQWs_QausiDevice_withOP.str 
+
 
 # 
 #------------------------------------------------------------------------ 
@@ -414,52 +411,54 @@ save outf=NwQWIP1D_RadialQWs_QausiDevice_noOP.str
 # ------------------------------------------------- END: basic device setup -----------------------------------------------------------------------------------------------## 
  
 #method gummel newton 
+#method maxtrap=10   itlimit=25  
 method gummel newton min.temp=2.0 max.temp=1000.0
 method maxtrap=20   itlimit=25
-#method maxtrap=10   itlimit=25  
  
  
 #define some output for standard structure files 
-output con.band val.band band.param photogen
+output con.band val.band band.param photogen 
  
 #define some special probes 
 #probe name=mybands_QW_radial y=$"INP_PPLUS_CORE_HEIGHT"/2.0 x.min= -$"INP_NPLUS_SHELL_RADIUS" x.max=$"INP_PPLUS_CORE_RADIUS" con.band val.band qfn qfp nwell pwell state=1  
  
+# -------------- Result Section 1: dark IV ----------------#
 solve init 
 #log outf=NwQWIP1D_RadialQWs_QuasiDevice_IV_dark_fb.log
 #log outf=NwQWIP1D_RadialQWs_QuasiDevice_IV_dark_rb.log
-solve vsubstrate=0.0  name=substrate outfile=NwQWIP1D_RadialQWs_QuasiDevice_noOP_dark_bias_0p0V.sta master onefileonly
-save SPEC.INTERSUB="intraband_NwQWIP_noOP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'_numBtC_$'num_BtoC_coupling_states'.log" lmin=2.0 lmax=6.0 nsamp=600 
-#save SPEC.INTERSUB=NwQWIP_Radial1D_v1_intersubband_bias_0p0V_300K.log lmin=2.0 lmax=6.0 nsamp=800
+solve vsubstrate=0.0  name=substrate outfile=NwQWIP1D_RadialQWs_QuasiDevice_withOP_dark_bias_0p0V.sta master onefileonly
+save SPEC.INTERSUB="intraband_NwQWIP_withOP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.log" lmin=2.0 lmax=6.0 nsamp=600 
+#solve vsubstrate=0.05 vstep=0.05 vfinal=0.5 name=substrate outfile=NwQWIP1D_RadialQWs_QuasiDevice_dark_bias_0p5V.sta master onefileonly
+#solve vsubstrate=0.05 vstep=0.05 vfinal=3.0 name=substrate  
+#solve vsubstrate=-0.05 vstep=-0.05 vfinal=-3.0 name=substrate  
 log off
+
 quit
 
-# extract and save the data
+#solve vsubstrate=0.0  name=substrate 
+##save qwell.spectrum=NwQWIP_Radial1D_v1_ZBTWO_interband_bias_0p0V.log lmin=0.90 lmax=2.3 nsamp=300 
+##save qwell.spectrum=NwQWIP_Radial1D_v1_ZBONE_interband_bias_0p0V.log lmin=1.0 lmax=1.8 nsamp=300 
+##save qwell.spectrum=NwQWIP_Radial1D_v1_ZBONE_interband_bias_0p0V_300K.log lmin=1.1 lmax=1.7 nsamp=300 
+##save SPEC.INTERSUB=v2_intersubband_bias_0p0V.log lmin=5.0 lmax=10.0 nsamp=300
+##save qwell.spectrum="NwQWIP_Radial1D_InGaAsPL_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.log" lmin=1.1 lmax=1.7 nsamp=300 
+#save SPEC.INTERSUB="intraband_NwQWIP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.log" lmin=2.0 lmax=6.0 nsamp=600 
+#
+## extract and save the data
 #go internal
-#get_data infile="intraband_NwQWIP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'_numBtC_$'num_BtoC_coupling_states'.log" \
-#         outfile="extracted_intraband_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'_numBtC_$'num_BtoC_coupling_states'.dat" \
-#         name="Wavelength;Gain (TM, electrons) (well 1) (1/cm)" 
+##get_data infile="intraband_NwQWIP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.log" \
+##         outfile="extracted_intraband_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.dat" \
+##         name="Wavelength;Gain (TM, electrons) (well 1) (1/cm)" 
+#get_data infile="intraband_NwQWIP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.log" \
+#         outfile="extracted_intraband_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'.dat" \
+#         name="Wavelength;Gain (TM, electrons) (well 1) (1/cm);Spontaneous emission (TM, electrons) (well 1) (1/(s cm3 eV))" 
 #
 #quit
-
-## NOTE: the extraction function currently does not work!
-## It cannot extract any quantities from a spectrum file!
-# extract the normalised InGaAs PL specture for the Deckbuild optimizer
-#extract init infile="NwQWIP_Radial1D_v1_ZBONE_interband_bias_0p0V_300K.log"
-#extract init infile="NwQWIP_Radial1D_v1_ZBONE_interband_bias_0p0V_300K.spc"
-#extract name="InGaAs_PL_normalised" curve("Wavelength", "Flux Spectral Density"/max("Flux Spectral Density")) outfile="test.dat"
-#extract name="InGaAs_PL_normalised" curve("Wavelength", "Flux Spectral Density (well 1)"/max("Flux Spectral Density (well 1)")) outfile="test.dat"
-#extract name="InGaAs_PL_normalised" curve(elect."Wavelength",elect."Wavelength"/max(elect."Wavelength")) outfile="test.dat"
-#extract name="InGaAs_PL_normalised" curve(elect."Wavelength",impurity=elect."Power Spectral Density (well 1)") outfile="test.dat"
-
 #solve vsubstrate=0.1 vstep=0.1 vfinal=1.5  name=substrate outfile=InGaAs_InP_QWIP_1993_v1_bias_1p5V.sta master onefileonly
 #save SPEC.INTERSUB=InGaAs_InP_QWIP_1993_v1_intersubband_bias_1p5V.log lmin=5.0 lmax=10.0 nsamp=300
 
 #solve vsubstrate=0.1 vstep=0.1 vfinal=3.5  name=substrate outfile=InGaAs_InP_QWIP_1993_v1_bias_3p5V.sta master onefileonly
 #save SPEC.INTERSUB=InGaAs_InP_QWIP_1993_v1_intersubband_bias_3p5V.log lmin=5.0 lmax=10.0 nsamp=300
 
-
-#quit
 
 ## ----------------------------------------------------- For ZB.ONE model -------------------------------------------------------##
 ### Generate the solution at bias=0.0V
