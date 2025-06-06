@@ -419,7 +419,7 @@ set ls_y_offset = -0.5
 #wavelength=4.4 angle=20 verbose 
 # version: pure TM
 beam num=1 tr.matrix  tblack=300 x.origin=$ls_x_offset-0.0 y.origin=$ls_y_offset-$left_bulk_width \
-wavelength=4.4 angle=0 verbose 
+wavelength=4.4 angle=90 verbose 
 
 # ------------------------------------------------- END: basic device setup -----------------------------------------------------------------------------------------------## 
  
@@ -436,25 +436,33 @@ output con.band val.band band.param photogen
 #probe name=mybands_QW_radial y=$"INP_PPLUS_CORE_HEIGHT"/2.0 x.min= -$"INP_NPLUS_SHELL_RADIUS" x.max=$"INP_PPLUS_CORE_RADIUS" con.band val.band qfn qfp nwell pwell state=1  
 
 ## 1. solve again for the intraband transition spectrum
-solve init 
-solve vcollector=0.0  name=collector outfile=NwQWIP1D_RadialQWsV2_noOP_dark_bias_0V.sta master onefileonly
+#solve init 
+#solve vcollector=0.0  name=collector outfile=NwQWIP1D_RadialQWsV2_noOP_dark_bias_0V.sta master onefileonly
 #solve vsubstrate=0.0  
-save SPEC.INTERSUB="intraband_NwQWIPV2_noOP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'_numBtC_$'num_BtoC_coupling_states'.log" lmin=2.0 lmax=6.0 nsamp=600 
-log off
-quit
+#save SPEC.INTERSUB="intraband_NwQWIPV2_noOP_bias_0V_300K_xGa_$'x_Ga_qwell'_dEcPer_$'dEc_per'_numBtC_$'num_BtoC_coupling_states'.log" lmin=2.0 lmax=6.0 nsamp=600 
+#log off
+#quit
 
 ## 2. solve for the spectral response
-#set light_intensity = 1e3
-#log outf=NwQWIP1D_RadialQWs_noOP_LightSource_xo_$'ls_x_offset'_yo_$'ls_y_offset'_SpecResp_no_qwip.log
-#solve B1=$light_intensity beam=1 lambda=3.0 wfinal=6.0 wstep=0.25
+set light_intensity = 1e3
+#log outf=NwQWIP1DV2_RadialQWs_noOP_LightSource_xo_$'ls_x_offset'_yo_$'ls_y_offset'_SpecResp_no_qwip.log
+#log outf=NwQWIP1DV2_RadialQWs_noOP_LightSource_xo_$'ls_x_offset'_yo_$'ls_y_offset'_SpecResp_with_qwip.log
+#log outf=dummy.log
+#solve B1=$light_intensity beam=1 lambda=3.0 wfinal=6.0 wstep=0.05
 #log off
+#quit
+
 
 ## 3. solve for the angle dependence at a fixed wavelength
-#log outf=NwQWIP1D_RadialQWs_noOP_B1_$'light_intensity'_AngleResponse.log
-#solve B1=$light_intensity beam=1 angle=-18.0 astep=5.0 afinal=-8 
-#log off
+solve init
+#solve prev
+#NOTE: put the log command after 'solve prev', otherwise you will store a data point 
+#      with the angle specified by the beam command, in addition to the angle sweep below.
+log outf=NwQWIP1DV2_RadialQWs_noOP_B1_$'light_intensity'_AngleResponse.log
+solve B1=$light_intensity beam=1 angle=-80.0 astep=5.0 afinal=80 
+log off
 
-#quit
+quit
 
 
 #log outf=NwQWIP1D_RadialQWs_QuasiDevice_IV_dark_fb.log
